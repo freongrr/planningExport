@@ -2,9 +2,29 @@ package Export::FrontEnd;
 
 use strict;
 
+my $g_zenity = undef;
+
+sub _zenity {
+    my ($class) = @_;
+    unless (defined($g_zenity)) {
+        `zenity 2> /dev/null`;
+        $g_zenity = ($? >> 8 == 255 && $ENV{'DISPLAY'}) ? 1 : 0;
+    }
+    return $g_zenity;
+}
+
 sub alert {
     my ($class, $message) = @_;
-    print STDERR $message."\n";
+
+    if (_zenity()) {
+        $message =~ s/&/&amp;/go;
+        $message =~ s/</&lt;/go;
+        $message =~ s/>/&gt;/go;
+        $message =~ s/"/&quot;/go;
+        `zenity --warning --text=\"$message\"`;
+    } else {
+        print STDERR $message."\n";
+    }
 }
 
 sub promptFromDate {
@@ -17,35 +37,66 @@ sub promptFromDate {
 sub promptPassword {
     my ($self) = @_;
 
-    # TODO
-    return (undef, undef);
+    if (_zenity()) {
+        my $values = `zenity --username --password --title="JIRA Login" 2> /dev/null`;
+        return split(/\|/, $values);
+    } else {
+        # TODO
+        return (undef, undef);
+    }
 }
-
 sub confirmExport {
     my ($class, $tasks, $fromDate, $toDate) = @_;
 
-    my @table;
-    push @table, ['Date', 'Category', 'Activity', 'Time'];
+    if (_zenity()) {
+        my @lines;
 
-    foreach my $task (@$tasks) {
-        push @table, [
-            $task->date(),
-            $task->category(),
-            $task->name(),
-            _formatTime($task->time()),
-        ];
+        foreach my $task (@$tasks) {
+            my $activity = $task->name();
+            if (length($activity) > 60) {
+                $activity = substr($activity, 0, 57).'...';
+            }
+
+            push @lines, 'TRUE';
+            push @lines, $task->date();
+            push @lines, $task->category();
+            push @lines, $activity;
+            push @lines, _formatTime($task->time());
+        }
+
+        my $output = join("\n", @lines);
+
+        my $prompt = "Do you really want to export these values?";
+        my $title = "Activity between ".($fromDate ? $fromDate : "the start").
+            " and ".($toDate ? $toDate : "today");
+
+        my $choice = `echo "$output" | zenity --list --checklist --column="Export" --column="Date" --column="Category" --column="Activity" --column="Time" --hide-column=1 --text="$prompt" --title="$title" --width=800 --height=500`;
+
+        return $choice ? 1 : 0;
+    } else {
+        my @table;
+        push @table, ['Date', 'Category', 'Activity', 'Time'];
+
+        foreach my $task (@$tasks) {
+            push @table, [
+                $task->date(),
+                $task->category(),
+                $task->name(),
+                _formatTime($task->time()),
+            ];
+        }
+
+        print "The following activity between ".
+            ($fromDate ? $fromDate : "the start")." and ".
+            ($toDate ? $toDate : "today")." can be exported:\n";
+        _printTable(\@table);
+
+        print "Do you really want to export these values? [y/N] ";
+        my $choice = <STDIN>;
+        chomp($choice);
+
+        return lc($choice) eq 'y' ? 1 : 0;
     }
-
-    print "The following activity between ".
-        ($fromDate ? $fromDate : "the start")." and ".
-        ($toDate ? $toDate : "today")." can be exported:\n";
-    _printTable(\@table);
-
-    print "Do you really want to export these values? [y/N] ";
-    my $choice = <STDIN>;
-    chomp($choice);
-
-    return lc($choice) eq 'y' ? 1 : 0;
 }
 
 sub _formatTime {
