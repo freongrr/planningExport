@@ -43,11 +43,6 @@ sub export {
     my $config = $self->config() || die "Missing config";
     my $planner = $self->planner() || die "Missing planner";
 
-    if (!$fromDate) {
-        my $lastFromDate = $config->get('lastExportedDate');
-        $fromDate = Export::FrontEnd->promptFromDate($lastFromDate);
-    }
-
     my $tasks = $planner->tasks($fromDate, $toDate);
 
     unless (scalar(@$tasks)) {
@@ -61,7 +56,7 @@ sub export {
     $tasks = $self->_retain($tasks, $exportedIds);
 
     unless (scalar(@$tasks)) {
-        die "The is activity to export between ".
+        die "There is no activity to export between ".
             ($fromDate ? $fromDate : "the start")." and ".
             ($toDate ? $toDate : "today");
     }

@@ -27,24 +27,57 @@ sub alert {
     }
 }
 
-sub promptFromDate {
-    my ($self, $lastDate) = @_;
+sub prompt {
+    my ($self, $message, $default) = @_;
 
-    # TODO
-    return $lastDate;
+    if (_zenity()) {
+        $message =~ s/&/&amp;/go;
+        $message =~ s/</&lt;/go;
+        $message =~ s/>/&gt;/go;
+        $message =~ s/"/&quot;/go;
+
+        my $choice = `zenity --entry --entry-text="$default" --text="$message" --title="Export"`;
+        chomp($choice);
+        return $choice;
+    } else {
+        print "$message [$default] ";
+        my $choice = <STDIN>;
+        chomp($choice);
+        if ($choice =~ /^\s*$/) {
+            $choice = $default;
+        }
+        return $choice;
+    }
 }
 
 sub promptPassword {
-    my ($self) = @_;
+    my ($self, $text) = @_;
 
+    my ($username, $password);
     if (_zenity()) {
-        my $values = `zenity --username --password --title="JIRA Login" 2> /dev/null`;
-        return split(/\|/, $values);
+        my $values = `zenity --username --password --title="$text" 2> /dev/null`;
+        ($username, $password) = split(/\|/, $values);
     } else {
-        # TODO
-        return (undef, undef);
+        print "$text\n";
+        print "  Username: ";
+        $username = <STDIN>;
+        chomp($username);
+        eval {
+            require Term::ReadKey;
+            Term::ReadKey::ReadMode(4);
+            print "  Password: ";
+            $password = <STDIN>;
+            chomp($password);
+            Term::ReadKey::ReadMode(0);
+            print "\n";
+        }; if ($@) {
+            print STDERR "[WARN] You need Term::ReadKey to input the"
+                ."password from the command line\n";
+        }
     }
+    return ($username, $password);
 }
+
 sub confirmExport {
     my ($class, $tasks, $fromDate, $toDate) = @_;
 

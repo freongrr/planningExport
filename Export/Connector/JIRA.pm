@@ -8,8 +8,6 @@ use constant ISSUE_CODE => qr/^([a-zA-Z]{2,}-\d+)/;
 use constant MONTHS => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dev'];
 
-require Export::FrontEnd;
-
 require LWP::UserAgent;
 require HTTP::Cookies;
 
@@ -61,20 +59,15 @@ sub password {
 sub connect {
     my ($self) = @_;
 
+    # TODO : Ideally we would ask the url once and save it in the config...
+
     my $url = $self->url() || die "Missing url";
 
     my $username = $self->username();
     my $password = $self->password();
 
-    unless ($self->username() && $self->password) {
-        ($username, $password) = Export::FrontEnd->promptPassword();
-
-        unless ($username && $password) {
-            die "Missing username and/or password";
-        }
-
-        $self->username($username);
-        $self->password($password);
+    unless ($username && $password) {
+        die "Missing username and/or password";
     }
 
     my $response = $self->{_agent}->get(
@@ -205,7 +198,22 @@ sub _formatDate {
 
 sub _formatTime {
     my ($time, $factor) = @_;
-    return Export::FrontEnd::_formatTime($time, $factor).'h';
+
+    $factor = 0.1 unless (defined($factor));
+
+    my $lpart = int($time);
+    my $rpart = ($time - $lpart);
+
+    $rpart = $rpart / $factor;
+    $rpart = sprintf( "%.0f", int($rpart + .5 * ($rpart <=> 0)) );
+    $rpart = $rpart * 100 * $factor;
+
+    if ($rpart >= 100) {
+        $lpart += 1;
+        $rpart = 0;
+    }
+
+   return sprintf("%d.%02dh", $lpart, $rpart);
 }
 
 1;

@@ -41,6 +41,28 @@ eval {
 
     my $config = new Export::Configuration('hamsterToJIRA');
 
+    # Resolve missing arguments
+
+    unless ($fromDate) {
+        my $lastDate = $config->get('lastExportedDate');
+        $fromDate = Export::FrontEnd->prompt("Export from:", $lastDate);
+    }
+
+    unless ($jiraUrl) {
+        my $lastUrl = $config->get('url');
+        $jiraUrl = Export::FrontEnd->prompt("JIRA URL:", $lastUrl);
+    }
+
+    die "Missing url" unless ($jiraUrl);
+
+    unless ($jiraUsername && $jiraPassword) {
+        ($jiraUsername, $jiraPassword) =
+            Export::FrontEnd->promptPassword("Login to JIRA");
+    }
+
+    die "Missing username" unless ($jiraUsername);
+    die "Missing password" unless ($jiraPassword);
+
     my $hamster = new Export::Planner::Hamster();
     $hamster->database($database);
 
