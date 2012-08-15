@@ -36,7 +36,7 @@ sub prompt {
         $message =~ s/>/&gt;/go;
         $message =~ s/"/&quot;/go;
 
-        my $choice = `zenity --entry --entry-text="$default" --text="$message" --title="Export"`;
+        my $choice = `zenity --entry --entry-text="$default" --text="$message" --title="Export" --width=400`;
         chomp($choice);
         return $choice;
     } else {
