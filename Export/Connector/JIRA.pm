@@ -59,16 +59,9 @@ sub password {
 sub connect {
     my ($self) = @_;
 
-    # TODO : Ideally we would ask the url once and save it in the config...
-
     my $url = $self->url() || die "Missing url";
-
-    my $username = $self->username();
-    my $password = $self->password();
-
-    unless ($username && $password) {
-        die "Missing username and/or password";
-    }
+    my $username = $self->username() || die "Missing username";
+    my $password = $self->password() || die "Missing password";
 
     my $response = $self->{_agent}->get(
         $url . '/rest/gadget/1.0/login'

@@ -41,43 +41,42 @@ eval {
 
     my $config = new Export::Configuration('hamsterToJIRA');
 
-    # Resolve missing arguments
+    my $bridge = new Export::Bridge();
+    $bridge->config($config);
 
+    my $hamster = new Export::Planner::Hamster();
+    $hamster->database($database);
+    $bridge->planner($hamster);
+
+    # Prompt for the starting date if it is missing
     unless ($fromDate) {
         my $lastDate = $config->get('lastExportedDate');
         $fromDate = Export::FrontEnd->prompt("Export from:", $lastDate);
     }
 
-    unless ($jiraUrl) {
-        my $lastUrl = $config->get('url');
-        $jiraUrl = Export::FrontEnd->prompt("JIRA URL:", $lastUrl);
+    my $tasks = $bridge->pendingTasks($fromDate, $toDate);
+
+    if (Export::FrontEnd->confirmExport($tasks, $fromDate, $toDate)) {
+        # Prompt for missing connection details
+        unless ($jiraUrl) {
+            my $lastUrl = $config->get('url');
+            $jiraUrl = Export::FrontEnd->prompt("JIRA URL:", $lastUrl);
+        }
+
+        unless ($jiraUsername && $jiraPassword) {
+            ($jiraUsername, $jiraPassword) =
+                Export::FrontEnd->promptPassword("Login to JIRA");
+        }
+
+        my $jira = new Export::Connector::JIRA();
+        $jira->config($config);
+        $jira->url($jiraUrl);
+        $jira->username($jiraUsername);
+        $jira->password($jiraPassword);
+        $bridge->connector($jira);
+
+        $bridge->exportTasks($tasks);
     }
-
-    die "Missing url" unless ($jiraUrl);
-
-    unless ($jiraUsername && $jiraPassword) {
-        ($jiraUsername, $jiraPassword) =
-            Export::FrontEnd->promptPassword("Login to JIRA");
-    }
-
-    die "Missing username" unless ($jiraUsername);
-    die "Missing password" unless ($jiraPassword);
-
-    my $hamster = new Export::Planner::Hamster();
-    $hamster->database($database);
-
-    my $jira = new Export::Connector::JIRA();
-    $jira->config($config);
-    $jira->url($jiraUrl);
-    $jira->username($jiraUsername);
-    $jira->password($jiraPassword);
-
-    my $bridge = new Export::Bridge();
-    $bridge->config($config);
-    $bridge->planner($hamster);
-    $bridge->connector($jira);
-
-    $bridge->export($fromDate, $toDate);
 };
 if ($@) {
     Export::FrontEnd->alert("ERROR: $@");

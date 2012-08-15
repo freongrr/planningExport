@@ -4,7 +4,6 @@ use strict;
 
 use fields qw(config planner connector);
 
-require Export::FrontEnd;
 require Export::Planner;
 require Export::Connector;
 
@@ -37,7 +36,13 @@ sub connector {
     return $self->{connector};
 }
 
+# Export without confirmation
 sub export {
+    my ($self, $fromDate, $toDate) = @_;
+    $self->exportTasks($self->pendingTasks($fromDate, $toDate));
+}
+
+sub pendingTasks {
     my ($self, $fromDate, $toDate) = @_;
 
     my $config = $self->config() || die "Missing config";
@@ -61,28 +66,10 @@ sub export {
             ($toDate ? $toDate : "today");
     }
 
-    if (Export::FrontEnd->confirmExport($tasks, $fromDate, $toDate)) {
-        $self->_exportTasks($tasks);
-    }
-
-    $config->save();
+    return $tasks;
 }
 
-sub _retain {
-    my ($self, $tasks, $ids) = @_;
-
-    my @keep;
-    foreach my $task (@$tasks) {
-        my $id = $task->id();
-        unless (grep(/^$id$/, @$ids)) {
-            push @keep, $task;
-        }
-    }
-
-    return \@keep;
-}
-
-sub _exportTasks {
+sub exportTasks {
     my ($self, $tasks) = @_;
 
     my $config = $self->config() || die "Missing config";
@@ -103,7 +90,7 @@ sub _exportTasks {
             }
         };
         if ($@) {
-            Export::FrontEnd->alert("Could not export $task:\n$@");
+            print STDERR "[WARN] Could not export $task: $@";
         }
     }
 
@@ -111,6 +98,22 @@ sub _exportTasks {
     if ($lastDate) {
         $config->set('lastExportedDate', $lastDate);
     }
+
+    $config->save();
+}
+
+sub _retain {
+    my ($self, $tasks, $ids) = @_;
+
+    my @keep;
+    foreach my $task (@$tasks) {
+        my $id = $task->id();
+        unless (grep(/^$id$/, @$ids)) {
+            push @keep, $task;
+        }
+    }
+
+    return \@keep;
 }
 
 1;
