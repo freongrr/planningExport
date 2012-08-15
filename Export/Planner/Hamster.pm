@@ -77,7 +77,7 @@ sub _fetch {
 
     my $command = "sqlite3 ".$self->database()." \"$sql;\"";
 
-    my $output = `$command` || die $!;
+    my $output = `$command`;
     my @rows = split('\n', $output);
 
     return @rows;
