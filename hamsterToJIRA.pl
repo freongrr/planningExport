@@ -82,4 +82,64 @@ if ($@) {
     Export::FrontEnd->alert("ERROR: $@");
 }
 
-# TODO : documentation
+__END__
+
+=head1 NAME
+
+hamsterToJIRA.pl - Export time tracked with Hamster to JIRA.
+
+=head1 SYNOPSIS
+
+perl hamsterToJIRA.pl
+[-d|--database I<path>]
+[-j|--jira I<url>]
+[-u|--username I<username>]
+[-p|--password I<password>]
+[-f|--from I<YYYY-MM-DD>]
+[-t|--to I<YYYY-MM-DD>]
+[--help]
+
+=head1 DESCRIPTION 
+
+=over 8
+
+=item B<-d> I<path>, B<--database> I<path>
+
+Path to the Hamster SQLite database (defaults to I<~/.local/share/hamster-applet/hamster.db>).
+
+=item B<-j> I<url>, B<--jira> I<url>
+
+URL pointing to JIRA home page (e.g. I<http://jira.mycompany.com:8080>). If not supplied, thr URLbof the last export is used.
+
+=item B<-u> I<username>, B<--username> I<username>
+
+JIRA connection login.
+
+=item B<-p> I<password>, B<--password> I<password>
+
+JIRA connection password.
+
+=item B<-f> I<YYYY-MM-DD>, B<--from> I<YYYY-MM-DD>
+
+Date to export the activity from. If not supplied, the date of the last exported activity is used. 
+
+=item B<-t> I<YYYY-MM-DD>, B<--to> I<YYYY-MM-DD>
+
+Date to export the activity from. If not supplied, the current date is used.
+
+=item B<--help>
+
+Print a brief help message and exits.
+
+=back
+
+This script prompts the user for missing arguments (JIRA connection details, start date). If Zenity is available, the command line prompts are replaced with dialog boxes.
+
+Exported tasks are stored in a configuration file, to avoid exporting them multiple times. To force the export again, edit or delete the configuration file, located at I<~/.config/planningExport/hamsterToJIRA>.
+
+=head1 SEE ALSO
+
+Hamster project site: http://projecthamster.wordpress.com
+
+=cut
+
