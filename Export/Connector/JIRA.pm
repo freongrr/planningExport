@@ -76,6 +76,8 @@ sub connect {
     unless ($response->content =~ /loginSucceeded":true/o) {
         die "Authentication failed";
     }
+
+    $self->config()->set('url', $url);
 }
 
 sub exportTask {
