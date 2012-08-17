@@ -110,7 +110,7 @@ sub exportTask {
         die "Can't find JIRA issue id for $issueCode";
     }
 
-    my $date = _formatDate($task->date);
+    my $date = _formatDate($task->date, $task->start);
     my $time = _formatTime($task->time);
     my $description = $task->description;
 
@@ -178,7 +178,7 @@ sub _logWork {
 }
 
 sub _formatDate {
-    my ($date) = @_;
+    my ($date, $start) = @_;
 
     my $year = substr($date, 0, 4);
     my $month = substr($date, 5, 2);
@@ -186,7 +186,23 @@ sub _formatDate {
 
     $date = ($day * 1).'/';
     $date .= MONTHS->[$month - 1].'/';
-    $date .= ($year - 2000).' 08:00 AM';
+    $date .= ($year - 2000);
+
+    if ($start) {
+        my $hours = substr($start, 0, 2);
+        my $minutes = substr($start, 3, 2);
+
+        # 1 AM -> 12 AM ; 1 PM -> 12 PM
+        if ($hours < 1) {
+            $date .= ' '.($hours * 1).':'.$minutes.' PM';
+        } elsif ($hours < 13) {
+            $date .= ' '.($hours * 1).':'.$minutes.' AM';
+        } else {
+            $date .= ' '.($hours - 12).':'.$minutes.' PM';
+        }
+    } else {
+        $date .= ' 08:00 AM';
+    }
 
     return $date;
 }

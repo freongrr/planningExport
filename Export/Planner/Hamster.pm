@@ -25,6 +25,7 @@ sub tasks {
 
     my $sql = "
         SELECT strftime('%Y-%m-%d', f.start_time) AS date,
+               strftime('%H:%M', f.start_time) AS start,
                strftime('%s', f.end_time) - strftime('%s', f.start_time),
                a.name,
                c.name,
@@ -46,7 +47,7 @@ sub tasks {
     foreach my $row ($self->_fetch($sql)) {
         # print "DEBUG: $row\n";
 
-        my ($factDate, $time, $activity, $category, $factId, $description )
+        my ($date, $start, $time, $activity, $category, $factId, $description)
             = split(/\|/, $row);
 
         $time = $time / 3600.00;
@@ -60,7 +61,8 @@ sub tasks {
 
         my $task = new Export::Task();
         $task->id($factId);
-        $task->date($factDate);
+        $task->date($date);
+        $task->start($start);
         $task->time($time);
         $task->name($activity);
         $task->category($category);

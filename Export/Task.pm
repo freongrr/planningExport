@@ -1,7 +1,7 @@
 package Export::Task;
 
 use strict;
-use fields qw(id date time name category description);
+use fields qw(id date start time name category description);
 use overload fallback => 1, '""' => sub {$_[0]->toString()};
 
 sub new {
@@ -17,12 +17,22 @@ sub id {
     return $self->{id};
 }
 
+# Date formatted as YYYY-MM-DD
 sub date {
     my ($self, $date) = @_;
     if (defined($date)) {
         $self->{date} = $date;
     }
     return $self->{date};
+}
+
+# Start time formatted as HH:MM
+sub start {
+    my ($self, $start) = @_;
+    if (defined($start)) {
+        $self->{start} = $start;
+    }
+    return $self->{start};
 }
 
 sub time {
