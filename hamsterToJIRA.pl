@@ -13,6 +13,7 @@ require Export::Connector::JIRA;
 use constant HAMSTER_DB =>
     $ENV{'HOME'}.'/.local/share/hamster-applet/hamster.db';
 
+my $lockFile;
 eval {
     my $database     = HAMSTER_DB;
     my $jiraUrl      = undef;
@@ -40,6 +41,14 @@ eval {
     }
 
     my $config = new Export::Configuration('hamsterToJIRA');
+
+    $lockFile = $config->file().'.lock';
+    if (-e $lockFile) {
+        die "The process is already running!";
+    } else {
+        open FILE, ">$lockFile";
+        close FILE;
+    }
 
     my $bridge = new Export::Bridge();
     $bridge->config($config);
@@ -80,6 +89,9 @@ eval {
 };
 if ($@) {
     Export::FrontEnd->alert("ERROR: $@");
+}
+if ($lockFile) {
+    unlink $lockFile;
 }
 
 __END__
