@@ -2,7 +2,7 @@ package Export::Connector::JIRA;
 
 use strict;
 use base qw(Export::Connector);
-use fields qw(config url username password _agent);
+use fields qw(config url username password dryrun _agent);
 
 use constant ISSUE_CODE => qr/^([a-zA-Z]{2,}-\d+)/;
 use constant MONTHS => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -54,6 +54,14 @@ sub password {
         $self->{password} = $password;
     }
     return $self->{password};
+}
+
+sub dryrun {
+    my ($self, $dryrun) = @_;
+    if (defined($dryrun)) {
+        $self->{dryrun} = $dryrun;
+    }
+    return $self->{dryrun};
 }
 
 sub connect {
@@ -148,7 +156,7 @@ sub _logWork {
 
     my $url = $self->url() || die "Missing url";
 
-    print "EXPORT: '$issueId', '$date', '$time', '$comment'\n";
+    print "[DEBUG] Logging work: '$issueId', '$date', '$time', '$comment'\n";
 
     my $response = $self->{_agent}->get(
         $url . '/secure/CreateWorklog!default.jspa?id=' . $issueId);
@@ -159,6 +167,10 @@ sub _logWork {
 
     if ($content =~ /name="atl_token" value="([^"]+)"/o) {
         my $token = $1;
+
+        if ($self->dryrun()) {
+            die "DRYRUN: not exporting";
+        }
 
         my $postResponse = $self->{_agent}->post(
             $url . '/secure/CreateWorklog.jspa',

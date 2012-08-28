@@ -90,7 +90,7 @@ sub exportTasks {
             }
         };
         if ($@) {
-            print STDERR "[WARN] Could not export $task: $@";
+            print STDERR "[WARN] Could not export '$task': $@";
         }
     }
 

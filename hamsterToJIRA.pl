@@ -21,6 +21,7 @@ eval {
     my $jiraPassword = undef;
     my $fromDate     = undef;
     my $toDate       = undef;
+    my $dryrun       = 0;
     my $help         = 0;
     my $man          = 0;
 
@@ -31,6 +32,7 @@ eval {
         'password|p=s' => \$jiraPassword,
         'from|f=s'     => \$fromDate,
         'to|t=s'       => \$toDate,
+        'dryrun'       => \$dryrun,
         'help|?'       => \$help,
         'man'          => \$man)) {
         pod2usage(2);
@@ -82,6 +84,7 @@ eval {
         $jira->url($jiraUrl);
         $jira->username($jiraUsername);
         $jira->password($jiraPassword);
+        $jira->dryrun($dryrun);
         $bridge->connector($jira);
 
         $bridge->exportTasks($tasks);
@@ -109,6 +112,7 @@ perl hamsterToJIRA.pl
 [-p|--password I<password>]
 [-f|--from I<YYYY-MM-DD>]
 [-t|--to I<YYYY-MM-DD>]
+[--dryrun]
 [--help]
 
 =head1 DESCRIPTION 
@@ -138,6 +142,10 @@ Date to export the activity from. If not supplied, the date of the last exported
 =item B<-t> I<YYYY-MM-DD>, B<--to> I<YYYY-MM-DD>
 
 Date to export the activity from. If not supplied, the current date is used.
+
+=item B<--dryrun>
+
+Do not export the tasks to JIRA.
 
 =item B<--help>
 
