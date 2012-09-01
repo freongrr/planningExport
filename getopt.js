@@ -36,7 +36,7 @@ module.exports.parse = function(argv) {
 
     var i = 2;
     while (i < argv.length) {
-        var arg = argv[i];
+        var original = arg = argv[i];
 
         if (arg === '--') {
             // end of options marker
@@ -53,7 +53,7 @@ module.exports.parse = function(argv) {
 
         var param = getParam(arg);
         if (!param) {
-            error('Unknown option: ' + arg);
+            error('Unknown option: ' + original);
         }
 
         var name = param.name;
@@ -70,10 +70,10 @@ module.exports.parse = function(argv) {
                 }
                 i++;
             } else {
-                error('Option ' + arg + ' requires an argument');
+                error('Option ' + original + ' requires an argument');
             }
         } else {
-            options[name] = 1;
+            options[name] = true;
         }
 
         i++;
@@ -97,7 +97,7 @@ module.exports.parse = function(argv) {
 
 module.exports.usage = function(message, verbose) {
     if (message) {
-        console.error("ERROR: " + message);
+        console.error(message);
     }
 
     // TODO : this should use the value passed to parse
@@ -105,11 +105,11 @@ module.exports.usage = function(message, verbose) {
     script = script.substring(script.lastIndexOf('/') + 1);
 
     // TODO : use a buffer
-    var usage = "Usage: node " + script;
+    var usage = "    node " + script;
 
     var maxWidth = 80;
     var width = usage.length;
-    var indent = width;
+    var indent = usage.length;
 
     for (var name in parameters) {
         var param = parameters[name];
@@ -139,6 +139,7 @@ module.exports.usage = function(message, verbose) {
 
         if (width + def.length > maxWidth) {
             usage += "\n";
+            width = 0;
             for (var i=0; i<indent; i++) {
                 usage += " ";
                 width++;
@@ -148,6 +149,8 @@ module.exports.usage = function(message, verbose) {
         usage += def;
         width += def.length;
     }
+
+    usage = "Usage:\n" + usage;
 
     console.log(usage);
 }
