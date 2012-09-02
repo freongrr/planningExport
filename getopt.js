@@ -73,7 +73,11 @@ module.exports.parse = function(argv) {
                 error('Option ' + original + ' requires an argument');
             }
         } else {
-            options[name] = true;
+            if (param.negated) {
+                options[param.negated] = false;
+            } else {
+                options[name] = true;
+            }
         }
 
         i++;
@@ -165,21 +169,49 @@ module.exports.usage = function(message, verbose) {
 }
 
 function addParam(def, value) {
+    var negated = false;
+
+    if (def.charAt(def.length - 1) == '!') {
+        negated = true;
+        def = def.substring(0, def.length - 1);
+    }
+
     var parts = def.split('=');
     var aliases = parts[0].split('|');
     var name = aliases.shift();
 
     var type = undefined;
     if (parts.length == 2) {
+        if (negated) {
+            error('Negated options may not have arguments');
+        }
         type = parts[1];
     }
 
-    parameters[name] =  {
+    parameters[name] = {
         name: name,
         aliases: aliases,
         type: type,
         value: value,
     };
+
+    // Add the negated versions of the options
+    if (negated) {
+        addNegatedParam(name, name);
+        for (var i=0; i<aliases.length; i++) {
+            addNegatedParam(aliases[i], name);
+        }
+    }
+}
+
+function addNegatedParam(name, negatedParam) {
+    if (name.length > 1) {
+        parameters['no-' + name] = {
+            name: 'no-' + name,
+            aliases: ['no' + name],
+            negated: negatedParam,
+        };
+    }
 }
 
 function getParam(alias) {
