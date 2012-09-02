@@ -66,7 +66,7 @@ module.exports.parse = function(argv) {
                 } else if (Array.isArray(options[name])) {
                     options[name].push(value);
                 } else {
-                    var values = [options[name], value];
+                    options[name] = [options[name], value];
                 }
                 i++;
             } else {
