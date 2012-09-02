@@ -117,11 +117,20 @@ module.exports.usage = function(message, verbose) {
         var def = " [";
 
         // Primary name
-        def += "-" + name;
+        if (name.length == 1) {
+            def += "-" + name;
+        } else {
+            def += "--" + name;
+        }
 
         // Aliases
         for (var i=0; i<param.aliases.length; i++) {
-            def += "|--" + param.aliases[i];
+            def += "|";
+            if (param.aliases[i].length == 1) {
+                def += "-" + param.aliases[i];
+            } else {
+                def += "--" + param.aliases[i];
+            }
         }
 
         // Argument
