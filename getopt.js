@@ -60,6 +60,10 @@ module.exports.parse = function(argv) {
         if (param.type) {
             if (i + 1 < argv.length) {
                 var value = argv[i + 1];
+                if (param.value != undefined &&
+                    param.value.constructor === Function) {
+                    value = param.value(name, value);
+                }
                 // TODO : only multiple values when specified
                 if (options[name] === undefined) {
                     options[name] = value;
@@ -73,7 +77,10 @@ module.exports.parse = function(argv) {
                 error('Option ' + original + ' requires an argument');
             }
         } else {
-            if (param.negated) {
+            if (param.value != undefined &&
+                param.value.constructor === Function) {
+                value = param.value(name);
+            } else if (param.negated) {
                 options[param.negated] = false;
             } else {
                 options[name] = true;
