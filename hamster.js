@@ -4,7 +4,7 @@ var logger = require("./logger.js"),
 var dbFile;
 
 // TODO : best way to set up the object?
-exports.withFile = function(file) {
+exports.database = function(file) {
     dbFile = file;
     return this;
 }
