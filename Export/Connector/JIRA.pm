@@ -6,7 +6,7 @@ use fields qw(config url username password dryrun _agent);
 
 use constant ISSUE_CODE => qr/^([a-zA-Z]{2,}-\d+)/;
 use constant MONTHS => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dev'];
+                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 require LWP::UserAgent;
 require HTTP::Cookies;
@@ -172,6 +172,8 @@ sub _logWork {
             die "DRYRUN: not exporting";
         }
 
+        # print STDERR "*** POSTING: issueId='$issueId', date='$date', time='$time', comment='$comment', token='$token' ***\n";
+
         my $postResponse = $self->{_agent}->post(
             $url . '/secure/CreateWorklog.jspa',
             Content_Type => 'application/x-www-form-urlencoded',
@@ -184,7 +186,8 @@ sub _logWork {
                          'adjustEstimate' => 'auto', });
 
         if ($postResponse->code != 302) {
-            die "Failed to log work";
+            $response->content =~ /^(.*errMsg.*)$/mio;
+            die "Failed to log work (".$postResponse->code.": ".$1.")";
         }
     }
 }
