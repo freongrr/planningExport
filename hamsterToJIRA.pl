@@ -49,7 +49,8 @@ eval {
 
     $lockFile = $config->file().'.lock';
     if (-e $lockFile) {
-        die "The process is already running!";
+        Export::FrontEnd->alert("ERROR: The process is already running!");
+        exit(1);
     } else {
         open FILE, ">$lockFile";
         close FILE;
