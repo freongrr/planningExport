@@ -71,6 +71,10 @@ sub connect {
     my $username = $self->username() || die "Missing username";
     my $password = $self->password() || die "Missing password";
 
+    # Escape magic characters
+    chomp($password);
+    $password =~ s/(\W)/sprintf('%%%X', ord($1))/ge;
+
     my $response = $self->{_agent}->get(
         $url . '/rest/gadget/1.0/login'
             .'?os_cookie=true'
